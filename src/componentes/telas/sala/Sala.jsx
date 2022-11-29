@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import PredioContext from "./PredioContext";
+import SalaContext from "./SalaContext";
 import Tabela from "./Tabela";
 import Form from "./Form";
 
-function Predio() {
+function Sala() {
     // alerta inicializado em branco
     const [alerta, setAlerta] = useState({ status: "", message: "" })
     // lista de objetos a exibir na tela inicializada vazia
@@ -15,11 +15,13 @@ function Predio() {
         codigo: "", nome: "",
         descricao: "", sigla: ""
     });
+    // lista de prédios para seleção
+    const [listaPredios, setListaPredios] = useState([]);
 
     // recuperar registro
     const recuperar = async codigo => {
         // endereço da API
-        await fetch(`${process.env.REACT_APP_ENDERECO_API}/predios/${codigo}`)
+        await fetch(`${process.env.REACT_APP_ENDERECO_API}/salas/${codigo}`)
             .then(response => response.json())
             .then(data => setObjeto(data))
             .catch(err => console.log('Erro: ' + err))
@@ -32,7 +34,7 @@ function Predio() {
         // determinar método pelo estado de 'editar'
         const metodo = editar ? "PUT" : "POST";
         try {
-            await fetch(`${process.env.REACT_APP_ENDERECO_API}/predios`,
+            await fetch(`${process.env.REACT_APP_ENDERECO_API}/salas`,
             {
                 method : metodo,
                 headers : {"Content-Type" : "application/json"},
@@ -50,7 +52,7 @@ function Predio() {
         } catch(err) {
             console.log(err.message);
         }
-        recuperaPredios();
+        recuperaSalas();
     }
 
     // tratamento de mudanças
@@ -61,11 +63,20 @@ function Predio() {
     }
 
     // consultar registros
+    const recuperaSalas = async () => {
+        // endereço da API
+        await fetch(`${process.env.REACT_APP_ENDERECO_API}/salas`)
+            .then(response => response.json())
+            .then(data => setListaObjetos(data))
+            .catch(err => console.log('Erro: ' + err))
+    }
+
+    // consultar registros de predios
     const recuperaPredios = async () => {
         // endereço da API
         await fetch(`${process.env.REACT_APP_ENDERECO_API}/predios`)
             .then(response => response.json())
-            .then(data => setListaObjetos(data))
+            .then(data => setListaPredios(data))
             .catch(err => console.log('Erro: ' + err))
     }
 
@@ -74,11 +85,11 @@ function Predio() {
         // janela de confirmação
         if (window.confirm('Deseja remover este objeto?')) {
             try {
-                await fetch(`${process.env.REACT_APP_ENDERECO_API}/predios/${objeto.codigo}`,
+                await fetch(`${process.env.REACT_APP_ENDERECO_API}/salas/${objeto.codigo}`,
                     { method: "DELETE" })
                     .then(response => response.json())
                     .then(json => setAlerta({ status: json.status, message: json.message }))
-                recuperaPredios();
+                recuperaSalas();
             } catch (err) {
                 console.log('Erro: ' + err);
             }
@@ -87,26 +98,28 @@ function Predio() {
 
     // recupera registros a cada mudança
     useEffect(() => {
+        recuperaSalas();
         recuperaPredios();
     }, []);
 
     return (
-        <PredioContext.Provider value={
+        <SalaContext.Provider value={
             {
                 alerta, setAlerta,
                 listaObjetos, setListaObjetos,
-                recuperaPredios,
+                recuperaSalas, recuperaPredios,
                 remover,
                 objeto, setObjeto,
                 editar, setEditar,
                 recuperar,
-                acaoCadastrar, handleChange
+                acaoCadastrar, handleChange,
+                listaPredios
             }
         }>
             <Tabela />
             <Form />
-        </PredioContext.Provider>
+        </SalaContext.Provider>
     );
 }
 
-export default Predio;
+export default Sala;
